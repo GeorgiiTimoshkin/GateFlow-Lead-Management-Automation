@@ -1,0 +1,819 @@
+{
+  "name": "GateFlow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gateflow-lead",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "http://127.0.0.1:5500,http://localhost:5500"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3f3efd30-de1d-48b0-81b3-c77494dc77a7",
+      "name": "Webhook",
+      "webhookId": "10dee44d-9511-4a4f-afed-b6d545ee6a5e"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "0f41050f-3b99-41a0-bb17-82dc870271c2",
+              "leftValue": "={{ $json.body.budget }}",
+              "rightValue": 3000,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        224,
+        0
+      ],
+      "id": "4023f2af-02a9-4c13-bc35-956cdc6345d3",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "775e322b-3212-47c5-b806-48698718cff8",
+              "name": "priority",
+              "value": "High",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        -96
+      ],
+      "id": "3c06a71f-bb5d-41d2-b30e-c2913556a180",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ec28a2d8-55c1-4cf2-a992-a09883de23b5",
+              "name": "priority",
+              "value": "Normal",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        96
+      ],
+      "id": "45b28655-15a0-411e-833a-5addfef2e444",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "CREATE TABLE customers (\n  id SERIAL PRIMARY KEY,\n  name VARCHAR(100) NOT NULL,\n  email VARCHAR(255) NOT NULL UNIQUE,\n  phone VARCHAR(30),\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\n\nCREATE TABLE requests (\nid SERIAL PRIMARY KEY,\ncustomer_id INTEGER NOT NULL REFERENCES customers(id),\nservice_type VARCHAR(100) NOT NULL,\nbudget NUMERIC(10, 2), \npriority VARCHAR(20),\nstatus VARCHAR(30) DEFAULT 'new',\ncreated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\n\nCREATE TABLE appointments (\n  id SERIAL PRIMARY KEY,\n  request_id INTEGER NOT NULL REFERENCES requests(id),\n  scheduled_at TIMESTAMP,\n  status VARCHAR(30) DEFAULT 'pending'\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.8,
+      "position": [
+        0,
+        -240
+      ],
+      "id": "2a8a3523-a272-4332-90c4-6b4c3e0190fb",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "oavKzSzwpGDaFdJG",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "requests",
+          "mode": "list",
+          "cachedResultName": "requests"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customer_id": "={{ $json.id }}",
+            "service_type": "={{ $(\"Webhook\").item.json.body.service }}",
+            "budget": "={{ $(\"Webhook\").item.json.body.budget }}",
+            "priority": "={{ $(\"Merge\").item.json.priority }}",
+            "submission_id": "={{ $(\"Edit Fields2\").item.json.submission_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "service_type",
+              "displayName": "service_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "budget",
+              "displayName": "budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "submission_id",
+              "displayName": "submission_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.8,
+      "position": [
+        1840,
+        -80
+      ],
+      "id": "c507e6be-c642-4941-8a97-d1f3d0bcf9f5",
+      "name": "Insert rows in a table1",
+      "credentials": {
+        "postgres": {
+          "id": "oavKzSzwpGDaFdJG",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "customers",
+          "mode": "list",
+          "cachedResultName": "customers"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ $json.body.email }}",
+            "name": "={{ $json.body.name }}",
+            "phone": "={{ $json.body.phone || null }}"
+          },
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.8,
+      "position": [
+        1552,
+        -80
+      ],
+      "id": "39a60f52-f1bf-4685-8239-4283258aac82",
+      "name": "Insert or update rows in a table",
+      "retryOnFail": false,
+      "credentials": {
+        "postgres": {
+          "id": "oavKzSzwpGDaFdJG",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        672,
+        -96
+      ],
+      "id": "61f055b4-5db7-49fa-8bcb-f191d726a6b0",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "874fc024-4251-4c10-b29f-99e183095845",
+              "name": "submission_id",
+              "value": "={{ $json.body.submission_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        896,
+        -96
+      ],
+      "id": "d1bb0127-4306-401f-bccb-e468fc6e8d1d",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "sendTo": "timoshkingeorgii@gmail.com",
+        "subject": "Your GateFlow request has been received",
+        "emailType": "text",
+        "message": "=Hello {{ $(\"Webhook\").item.json.body.name }},  Thank you for contacting GateFlow!  We have successfully received your request.  Request details: Service: {{ $(\"Webhook\").item.json.body.service }} Budget: NZ${{ $(\"Webhook\").item.json.body.budget }} Priority: {{ $(\"Merge\").item.json.priority }}  Our team will review your request and contact you shortly.  Best regards, GateFlow Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2064,
+        -80
+      ],
+      "id": "1722ec41-f2ca-4416-b5e0-cd6923ebd5a4",
+      "name": "Send a message",
+      "webhookId": "c1eec09b-9d96-4fcd-b17f-0a7c1bfb8f71",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1RqtWtfc27emIhqX",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1HiUgV_zi7hi-Ki_zjQ-p4dTL6csIxZ60xiVzq6r6IwQ/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Лист1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HiUgV_zi7hi-Ki_zjQ-p4dTL6csIxZ60xiVzq6r6IwQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Submission ID": "={{ $json.submission_id }}",
+            "Customer ID": "={{ $json.customer_id }}",
+            "Service": "={{ $json.service_type }}",
+            "Budget": "={{ $json.budget }}",
+            "Priority": "={{ $json.priority }}",
+            "Status": "={{ $json.status }}",
+            "Created At": "={{ $json.created_at }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Submission ID",
+              "displayName": "Submission ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer ID",
+              "displayName": "Customer ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Service",
+              "displayName": "Service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Created At",
+              "displayName": "Created At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2064,
+        -224
+      ],
+      "id": "d5dad76a-6d56-4e29-95aa-a4d3422925dc",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Z2uMxz6v9ifSBla9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "=timoshkingeorgii@gmail.com",
+          "mode": "id"
+        },
+        "start": "={{ $json.body.calendar_event.start }}",
+        "end": "={{ $json.body.calendar_event.end }}",
+        "additionalFields": {
+          "description": "={{ $json.body.calendar_event.description }}",
+          "location": "={{ $json.body.calendar_event.location }}",
+          "summary": "={{ $json.body.calendar_event.summary }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        1344,
+        112
+      ],
+      "id": "a46cf59f-47bd-471e-88be-bf7ea40fab9e",
+      "name": "Create an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "REVwEyE16Qfdeb7D",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT EXISTS (\n    SELECT 1\n    FROM requests\n    WHERE submission_id = $1::uuid\n) AS is_duplicate;",
+        "options": {
+          "queryReplacement": "={{ [$json.submission_id] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.8,
+      "position": [
+        1344,
+        -304
+      ],
+      "id": "2eddb6cf-1e42-4d90-bc4c-46c69d7385af",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "postgres": {
+          "id": "oavKzSzwpGDaFdJG",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "adac1e40-2ec5-4f04-8fe0-4d204891ce6b",
+              "leftValue": "={{ $json.is_duplicate }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1136,
+        -96
+      ],
+      "id": "99cae228-74ee-44a8-9320-ef408db44eba",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "chatId": "625389724",
+        "text": "=\n🚀 **GateFlow — Request Received**\n\nHello {{ $(\"Webhook\").item.json.body.name }}!\n\nThank you for contacting GateFlow. We've successfully received your request.\n\n📋 **YOUR REQUEST**\n\nService: {{ $(\"Webhook\").item.json.body.service }}\nBudget: NZD {{ $(\"Webhook\").item.json.body.budget }}\nPriority: {{ $(\"Merge\").item.json.priority }}\n\n📅 **SCHEDULING**\n\nOur team will review your request and contact you to arrange a suitable installation time.\n\nThank you for choosing GateFlow!\n\n_GateFlow Automation System_\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1344,
+        336
+      ],
+      "id": "1cee1846-5c5b-49e0-99fa-f68868c88e88",
+      "name": "Send a text message",
+      "webhookId": "c07a5280-8dc9-4951-8569-a31548dee87e",
+      "credentials": {
+        "telegramApi": {
+          "id": "cSHXjTwA83FgzfGf",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"Your request has been received!\",\n  \"company\": \"GateFlow\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2064,
+        112
+      ],
+      "id": "0ae1ae2a-35ff-47f0-ba0a-6721aa2301ea",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Insert or update rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Create an event": {
+      "main": [
+        []
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        []
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create an event",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Insert or update rows in a table",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f3a0f323-f164-449f-919d-8690b24f8af0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "14324dcccc98ab2ab15ec40460e0d852dba94a111b37753e4f50e1748d4f6e61"
+  },
+  "nodeGroups": [],
+  "id": "QXXEtPHQG3soqSw5",
+  "tags": []
+}
